@@ -32,7 +32,7 @@ class CargoType(CamelModel):
     height: float = Field(gt=0)
     weight: float = Field(ge=0)
     quantity: int = Field(ge=1)
-    color: str = "#f97316"
+    color: str = "#ef4444"
     package_type: PackageType = PackageType.BOX
     allow_rotation: bool = True
     allow_vertical_rotation: bool = False

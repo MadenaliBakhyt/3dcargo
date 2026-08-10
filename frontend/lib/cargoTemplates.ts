@@ -29,6 +29,6 @@ export const PACKAGE_TYPE_LABELS: Record<PackageType, string> = {
 };
 
 export const CARGO_COLOR_PALETTE = [
-  "#f97316", "#3b82f6", "#22c55e", "#a855f7", "#ef4444",
+  "#ef4444", "#3b82f6", "#22c55e", "#a855f7", "#78716c",
   "#06b6d4", "#eab308", "#ec4899", "#14b8a6", "#6366f1",
 ];

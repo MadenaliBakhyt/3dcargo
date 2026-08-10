@@ -19,7 +19,7 @@ const DEMO_CARGO: CargoType = {
   height: 160,
   weight: 450,
   quantity: 15,
-  color: "#f97316",
+  color: "#ef4444",
   packageType: "pallet",
   allowRotation: true,
   allowVerticalRotation: false,

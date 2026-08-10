@@ -77,6 +77,27 @@ test.describe("Cargo Loading Planner - golden path", () => {
     await expect(page.getByRole("definition").filter({ hasText: "10 / 10" })).toBeVisible();
   });
 
+  test("a single cargo type with a large quantity renders fully in the 3D scene without WebGL errors", async ({ page }) => {
+    // Regression test: drei's <Instances> allocates its buffer once at the size it had when
+    // mounted (0 items, before any calculation). Without remounting on count change, adding a
+    // cargo type with more instances than that overflows the GPU buffer and nothing renders.
+    const consoleErrors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") consoleErrors.push(msg.text());
+    });
+
+    await page.goto("/");
+    await selectEuroTruck(page);
+    await addCargo(page, { name: "Коробка 200", length: "50", width: "40", height: "40", weight: "10", quantity: "200" });
+
+    await page.getByRole("button", { name: /Рассчитать размещение/i }).click();
+    await expect(page.getByText("Весь груз успешно размещён")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("definition").filter({ hasText: "200 / 200" })).toBeVisible();
+
+    await page.waitForTimeout(500);
+    expect(consoleErrors.filter((e) => e.includes("WebGL"))).toEqual([]);
+  });
+
   test("cargo that cannot possibly fit is reported as unplaced with a reason", async ({ page }) => {
     await page.goto("/");
     await selectEuroTruck(page);

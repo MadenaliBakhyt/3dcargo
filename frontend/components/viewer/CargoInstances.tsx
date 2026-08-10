@@ -21,9 +21,16 @@ export function CargoInstances({ placements, visibleCount }: CargoInstancesProps
   const visible = visibleCount != null ? placements.slice(0, visibleCount) : placements;
   const selected = placements.find((p) => p.instanceId === selectedInstanceId);
 
+  // drei's <Instances> allocates its InstancedMesh buffer once, sized by `limit`, and does not
+  // grow it later -- reusing the same instance across renders while `placements` grows (e.g. once
+  // a calculation result comes in after mounting empty) silently overflows the GPU buffer and
+  // nothing renders. Keying on the full placement count forces a fresh, correctly-sized mesh
+  // whenever the truck's item count changes; `range` alone still drives the loading animation.
+  const instancesKey = `${placements[0]?.truckId ?? "empty"}-${placements.length}`;
+
   return (
     <group>
-      <Instances limit={Math.max(visible.length, 1)} range={visible.length}>
+      <Instances key={instancesKey} limit={Math.max(placements.length, 1)} range={visible.length}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial roughness={0.7} metalness={0.05} />
         {visible.map((p) => {
@@ -53,7 +60,7 @@ export function CargoInstances({ placements, visibleCount }: CargoInstancesProps
           position={toThreePosition(selected.x, selected.y, selected.z, selected.length, selected.width, selected.height)}
         >
           <boxGeometry args={toThreeSize(selected.length * 1.01, selected.width * 1.01, selected.height * 1.01)} />
-          <meshBasicMaterial color="#f97316" wireframe />
+          <meshBasicMaterial color="#ef4444" wireframe />
         </mesh>
       )}
 
