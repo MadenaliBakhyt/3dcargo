@@ -62,7 +62,7 @@ docker-compose.yml
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000   # pick any free port instead of 8000
 ```
 
 The API is now at `http://localhost:8000` (`/docs` for the OpenAPI UI, `/api/health` for a health
@@ -73,8 +73,8 @@ check).
 ```bash
 cd frontend
 npm install
-cp .env.local.example .env.local   # NEXT_PUBLIC_API_URL, defaults to http://localhost:8000
-npm run dev
+cp .env.local.example .env.local   # set NEXT_PUBLIC_API_URL to match the backend port above
+npm run dev -- -p 3000              # pick any free port instead of 3000
 ```
 
 Open `http://localhost:3000`. Click **"Попробовать демо"** for an instant real calculation (Euro
@@ -86,7 +86,28 @@ truck 86 m³, 15 EURO pallets 120×80×160 cm / 450 kg).
 docker compose up --build
 ```
 
-Frontend on `:3000`, backend on `:8000`.
+Frontend on `:3000`, backend on `:8000` by default.
+
+**If those ports are already taken on your server**, copy `.env.example` to `.env` and set
+`BACKEND_PORT` / `FRONTEND_PORT` to free ones — `docker-compose.yml` reads them and also derives
+the frontend's `NEXT_PUBLIC_API_URL` build arg from `BACKEND_PORT` automatically:
+
+```bash
+cp .env.example .env
+# edit .env: BACKEND_PORT=8001, FRONTEND_PORT=3001
+docker compose up --build
+```
+
+Or without a `.env` file:
+
+```bash
+BACKEND_PORT=8001 FRONTEND_PORT=3001 docker compose up --build
+```
+
+If the frontend is reached through a different host/domain than the backend (e.g. behind a
+reverse proxy), set `NEXT_PUBLIC_API_URL` explicitly in `.env` instead of relying on the
+`BACKEND_PORT`-derived `localhost` default — it's what the *browser* uses to reach the API, not
+the frontend container.
 
 ## Testing
 
