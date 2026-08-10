@@ -73,12 +73,16 @@ check).
 ```bash
 cd frontend
 npm install
-cp .env.local.example .env.local   # set NEXT_PUBLIC_API_URL to match the backend port above
-npm run dev -- -p 3000              # pick any free port instead of 3000
+npm run dev -- -p 3000   # pick any free port instead of 3000
 ```
 
 Open `http://localhost:3000`. Click **"Попробовать демо"** for an instant real calculation (Euro
 truck 86 m³, 15 EURO pallets 120×80×160 cm / 450 kg).
+
+By default the browser only ever calls `/api/...` on this app's own origin; the Next.js server
+proxies that to the backend (see "How the frontend reaches the backend" below). If your backend
+isn't at `http://localhost:8000`, copy `.env.local.example` to `.env.local` and set
+`BACKEND_INTERNAL_URL` accordingly.
 
 ### Docker
 
@@ -86,28 +90,29 @@ truck 86 m³, 15 EURO pallets 120×80×160 cm / 450 kg).
 docker compose up --build
 ```
 
-Frontend on `:3000`, backend on `:8000` by default.
+Frontend on `:3000`, backend on `:8000` by default — this works out of the box on `localhost`, a
+bare server IP, or a domain, with no configuration, because the browser never needs to know the
+backend's address (see below).
 
-**If those ports are already taken on your server**, copy `.env.example` to `.env` and set
-`BACKEND_PORT` / `FRONTEND_PORT` to free ones — `docker-compose.yml` reads them and also derives
-the frontend's `NEXT_PUBLIC_API_URL` build arg from `BACKEND_PORT` automatically:
+**If those host ports are already taken on your server**, copy `.env.example` to `.env` and set
+`BACKEND_PORT` / `FRONTEND_PORT` to free ones (or pass them inline:
+`BACKEND_PORT=8001 FRONTEND_PORT=3001 docker compose up --build`). These only remap the *host*
+ports Docker publishes; the frontend still finds the backend correctly regardless, since they talk
+to each other over Docker's internal network, not through the host-published ports.
 
-```bash
-cp .env.example .env
-# edit .env: BACKEND_PORT=8001, FRONTEND_PORT=3001
-docker compose up --build
-```
+### How the frontend reaches the backend
 
-Or without a `.env` file:
-
-```bash
-BACKEND_PORT=8001 FRONTEND_PORT=3001 docker compose up --build
-```
-
-If the frontend is reached through a different host/domain than the backend (e.g. behind a
-reverse proxy), set `NEXT_PUBLIC_API_URL` explicitly in `.env` instead of relying on the
-`BACKEND_PORT`-derived `localhost` default — it's what the *browser* uses to reach the API, not
-the frontend container.
+The browser always calls this app's own origin (`/api/calculate`, a relative path) — never the
+backend's host or port directly. The Next.js server proxies that request to the backend
+server-side (`next.config.mjs`'s `rewrites()`, using the `BACKEND_INTERNAL_URL` env var, default
+`http://backend:8000` in Docker / `http://localhost:8000` otherwise). This is what makes the app
+work unmodified whether it's opened as `localhost:3000`, `http://your-server-ip:3050`, or a real
+domain: **do not** point a browser-facing setting at `localhost` when deploying to a remote
+server — `localhost` in a browser always means the visitor's own machine, never the server, which
+is the mistake `NEXT_PUBLIC_API_URL` invites if set without thinking it through. Only set
+`NEXT_PUBLIC_API_URL` (a *build-time* value inlined into the browser bundle) if the browser must
+call the backend directly at a different origin than this app — e.g. no reverse proxy /
+server-side rendering in front of it at all.
 
 ## Testing
 

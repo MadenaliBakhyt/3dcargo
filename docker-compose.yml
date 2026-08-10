@@ -10,7 +10,13 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:${BACKEND_PORT:-8000}}
+        # "backend:8000" is this compose file's internal service address; it
+        # does not depend on BACKEND_PORT (that only remaps the HOST port) and
+        # normally never needs to change.
+        BACKEND_INTERNAL_URL: http://backend:8000
+        # Only set NEXT_PUBLIC_API_URL if the *browser* must call the backend
+        # directly at a different origin than this app -- see README.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:

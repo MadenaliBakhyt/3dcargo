@@ -1,6 +1,10 @@
 import type { CalculationRequest, CalculationResponse } from "@/types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Defaults to a relative path so the browser always calls this app's own
+// origin -- Next.js's rewrites (see next.config.mjs) forward it to the
+// backend server-side. Only set NEXT_PUBLIC_API_URL if the API is reachable
+// directly from the browser at a different origin than this app.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export class ApiError extends Error {
   constructor(message: string, public status: number) {
