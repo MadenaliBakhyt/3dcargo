@@ -23,6 +23,13 @@ class CandidatePoints:
         self._points.discard(point)
 
     def sorted_bottom_left_back(self) -> list[tuple[float, float, float]]:
-        """Bottom-Left-Back order: lowest Z (closest to floor) first, then
-        lowest Y (closest to left wall), then lowest X (closest to front)."""
-        return sorted(self._points, key=lambda p: (p[2], p[1], p[0]))
+        """Bottom-Front-Left order: lowest Z (closest to floor) first, then
+        lowest X (closest to the front), then lowest Y (closest to the left
+        wall). Prioritizing X before Y means the packer fills a row across
+        the truck's *width* at the current front position before it ever
+        advances further down the *length* -- matching how cargo is loaded
+        in practice (side by side across the trailer, row by row down its
+        length) instead of hugging one wall in a single line the full length
+        of the truck before ever using the rest of the width.
+        """
+        return sorted(self._points, key=lambda p: (p[2], p[0], p[1]))

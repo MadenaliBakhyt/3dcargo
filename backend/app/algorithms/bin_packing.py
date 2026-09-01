@@ -275,7 +275,7 @@ def build_strategies(item_count: int) -> list[Strategy]:
             "first_fit",
         ),
         Strategy(
-            "Bottom-Left-Back (Priority/Weight)",
+            "Bottom-Front-Left (Priority/Weight)",
             lambda i: (rank(i), -i.weight, -i.volume, -i.base_area),
             "first_fit",
         ),

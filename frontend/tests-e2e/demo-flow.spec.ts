@@ -37,6 +37,26 @@ test.describe("Cargo Loading Planner - golden path", () => {
     await expect(page.locator("table")).toContainText("Паллета A");
   });
 
+  test("the demo pack fills the truck's width (3 pallets abreast) before extending its length", async ({ page }) => {
+    // Regression test: the packer used to prioritize extending along the
+    // truck's length before ever using its width, hugging one wall in a
+    // single line. It should instead fill a row across the width first.
+    await page.goto("/");
+    await page.getByRole("button", { name: /Попробовать демо/i }).click();
+    await expect(page.getByText("Весь груз успешно размещён")).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole("tab", { name: "Порядок размещения" }).click();
+    const rows = page.locator("table tbody tr");
+    // Columns: № | Груз | Машина | X | Y | Z | ...
+    const firstThreeY = await Promise.all(
+      [0, 1, 2].map((i) => rows.nth(i).locator("td").nth(4).textContent())
+    );
+    // The euro truck is 245cm wide and each pallet 80cm -- the first three
+    // placements should sit side by side (y = 0, 80, 160), not stacked
+    // behind one another at the same y.
+    expect(new Set(firstThreeY).size).toBe(3);
+  });
+
   test("clicking a placed item selects it and shows its coordinates and loading order", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: /Попробовать демо/i }).click();

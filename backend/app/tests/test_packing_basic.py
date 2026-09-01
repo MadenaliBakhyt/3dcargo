@@ -32,15 +32,19 @@ def test_two_identical_cargo_items_no_overlap(small_truck):
     assert not (overlap_x and overlap_y and overlap_z)
 
 
-def test_multiple_cargo_placed_in_a_row(small_truck):
+def test_multiple_cargo_fills_width_before_extending_length(small_truck):
+    # small_truck is 200 wide; four 50-wide boxes fill it in a single row
+    # across the width, without ever needing to extend down the length.
     cargo = CargoType(id="c1", name="Box", length=50, width=50, height=50, weight=10, quantity=4)
     result = run_packing([cargo], small_truck)
 
     assert len(result.unplaced) == 0
-    items = sorted(result.trucks[0].items, key=lambda i: i.x)
+    items = sorted(result.trucks[0].items, key=lambda i: i.y)
     assert all(item.z == 0 for item in items)
-    xs = [item.x for item in items]
-    assert xs == sorted(set(xs))  # all distinct x positions, spread across the row
+    assert all(item.x == 0 for item in items)
+    ys = [item.y for item in items]
+    assert ys == sorted(set(ys))  # all distinct y positions, spread across the width
+    assert ys == [0, 50, 100, 150]
 
 
 def test_cargo_placed_in_layers_when_floor_is_full():

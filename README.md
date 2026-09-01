@@ -152,8 +152,11 @@ its post-rotation `length, width, height`, so the frontend never has to compute 
    - **Candidate points**: instead of scanning every coordinate, only the corners exposed by
      already-placed boxes (plus the origin) are considered — the standard extreme-point technique
      for 3D bin packing.
-   - **Bottom-Left-Back** ordering of candidate points, so boxes settle toward the floor and the
-     front-left corner, producing a dense pack.
+   - **Bottom-Front-Left** ordering of candidate points: lowest Z (floor) first, then lowest X
+     (front), then lowest Y (left wall) — so a row fills across the truck's *width* before the pack
+     ever advances further down its *length*, matching how cargo is loaded in practice (side by
+     side across the trailer, row by row down its length) instead of hugging one wall in a single
+     line the full length of the truck before using the rest of the width.
    - **AABB collision detection** against a uniform spatial grid (not an O(n²) scan against every
      placed item), for bounds/collision checks that stay fast past thousands of items.
    - **Physical support checking**: an item may only rest where the floor or the tops of other
