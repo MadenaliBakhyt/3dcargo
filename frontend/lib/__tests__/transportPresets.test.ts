@@ -3,10 +3,17 @@ import { describe, expect, it } from "vitest";
 import { TRANSPORT_PRESETS, transportFloorAreaM2, transportVolumeM3 } from "@/lib/transportPresets";
 
 describe("transportPresets", () => {
-  it("exposes the six required truck/container templates", () => {
-    expect(TRANSPORT_PRESETS).toHaveLength(6);
+  it("exposes all truck/container/trailer templates with unique ids", () => {
+    expect(TRANSPORT_PRESETS.length).toBeGreaterThanOrEqual(10);
     const ids = TRANSPORT_PRESETS.map((t) => t.id);
-    expect(new Set(ids).size).toBe(6);
+    expect(new Set(ids).size).toBe(TRANSPORT_PRESETS.length);
+  });
+
+  it("includes the trawl, tent, and car-carrier presets", () => {
+    const ids = TRANSPORT_PRESETS.map((t) => t.id);
+    expect(ids).toEqual(
+      expect.arrayContaining(["flatbed-trawl", "tent-105", "tent-120", "car-carrier"])
+    );
   });
 
   it("computes the euro truck volume as ~88.3 m3", () => {

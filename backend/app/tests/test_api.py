@@ -60,6 +60,21 @@ def test_calculate_endpoint_respects_loading_side_setting():
     assert placement["y"] + placement["width"] == 200
 
 
+def test_calculate_endpoint_respects_loading_direction_setting():
+    payload = {
+        "transport": {"id": "t", "name": "T", "length": 200, "width": 200, "height": 200, "maxWeight": 5000},
+        "cargoTypes": [
+            {"id": "c1", "name": "Box", "length": 50, "width": 50, "height": 50, "weight": 10, "quantity": 1}
+        ],
+        "settings": {"loadingDirection": "back"},
+    }
+    response = client.post("/api/calculate", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    placement = data["placements"][0]
+    assert placement["x"] + placement["length"] == 200
+
+
 def test_calculate_endpoint_rejects_empty_cargo_list():
     payload = {
         "transport": {

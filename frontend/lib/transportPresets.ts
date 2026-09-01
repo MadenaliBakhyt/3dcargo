@@ -8,6 +8,10 @@ export const TRANSPORT_PRESETS: Transport[] = [
   { id: "container-20", name: "Контейнер 20'", length: 589, width: 235, height: 239, maxWeight: 24800 },
   { id: "container-40", name: "Контейнер 40'", length: 1203, width: 235, height: 239, maxWeight: 28470 },
   { id: "container-40-hc", name: "Контейнер 40' HC", length: 1203, width: 235, height: 270, maxWeight: 28490 },
+  { id: "flatbed-trawl", name: "Трал (площадка)", length: 1360, width: 250, height: 300, maxWeight: 20000 },
+  { id: "tent-105", name: "Тентованный 105 м³", length: 1360, width: 250, height: 310, maxWeight: 20000 },
+  { id: "tent-120", name: "Тентованный 120 м³", length: 1600, width: 250, height: 300, maxWeight: 20000 },
+  { id: "car-carrier", name: "Прицеп для перевозки автомобилей", length: 1360, width: 250, height: 220, maxWeight: 12000 },
 ];
 
 export function transportVolumeM3(t: Transport): number {

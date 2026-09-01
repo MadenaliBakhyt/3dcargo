@@ -44,11 +44,13 @@ export interface CargoType {
 }
 
 export type LoadingSide = "left" | "right";
+export type LoadingDirection = "front" | "back";
 
 export interface CalculationSettings {
   maxTrucks: number;
   supportRatioThreshold: number;
   loadingSide: LoadingSide;
+  loadingDirection: LoadingDirection;
 }
 
 export interface CalculationRequest {

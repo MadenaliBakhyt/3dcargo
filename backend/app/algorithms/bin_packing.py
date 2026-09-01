@@ -314,6 +314,19 @@ def mirror_to_loading_side(trucks: list[Truck], truck_width: float, loading_side
             item.y = truck_width - item.y - item.width
 
 
+def mirror_to_loading_direction(trucks: list[Truck], truck_length: float, loading_direction: str) -> None:
+    """Same idea as mirror_to_loading_side but along X (the vehicle's length):
+    the packing loop always packs toward X=0 (the front/cab end). For "back"
+    this mirrors every placement so cargo instead hugs the open rear doors
+    (X=truck_length) -- e.g. for tail-lift unloading or axle-load balance.
+    """
+    if loading_direction != "back":
+        return
+    for truck in trucks:
+        for item in truck.items:
+            item.x = truck_length - item.x - item.length
+
+
 @dataclass
 class PackingResult:
     trucks: list[Truck]
@@ -327,6 +340,7 @@ def run_packing(
     max_trucks: int = 50,
     support_ratio_threshold: float = 0.75,
     loading_side: str = "left",
+    loading_direction: str = "front",
 ) -> PackingResult:
     instances = expand_instances(cargo_types)
     fittable, impossible = filter_impossible(instances, transport)
@@ -358,6 +372,7 @@ def run_packing(
 
     assert best_trucks is not None and best_unplaced is not None
     mirror_to_loading_side(best_trucks, transport.width, loading_side)
+    mirror_to_loading_direction(best_trucks, transport.length, loading_direction)
     return PackingResult(
         trucks=best_trucks, unplaced=best_unplaced + impossible, strategy_used=best_name
     )
