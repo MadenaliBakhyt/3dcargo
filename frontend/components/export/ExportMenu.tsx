@@ -4,6 +4,7 @@ import { FileJson, FileSpreadsheet, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { exportPlacementsCsv } from "@/lib/export/csv";
+import { toFilenameStem } from "@/lib/export/downloadFile";
 import { exportProjectJson } from "@/lib/export/json";
 import { exportProjectPdf } from "@/lib/export/pdf";
 import { useCargoStore } from "@/stores/useCargoStore";
@@ -28,15 +29,18 @@ export function ExportMenu() {
   };
 
   const handleExportJson = () => {
-    exportProjectJson({
-      version: 1,
-      name: projectName,
-      createdAt: new Date().toISOString(),
-      transport,
-      cargoTypes,
-      settings,
-      result,
-    });
+    exportProjectJson(
+      {
+        version: 1,
+        name: projectName,
+        createdAt: new Date().toISOString(),
+        transport,
+        cargoTypes,
+        settings,
+        result,
+      },
+      `${toFilenameStem(projectName)}.json`
+    );
   };
 
   return (
@@ -48,7 +52,7 @@ export function ExportMenu() {
         <FileSpreadsheet /> CSV
       </Button>
       <Button variant="outline" size="sm" disabled={disabled} onClick={handleExportJson}>
-        <FileJson /> JSON
+        <FileJson /> Сохранить как файл
       </Button>
     </div>
   );

@@ -300,6 +300,20 @@ def build_strategies(item_count: int) -> list[Strategy]:
     return strategies
 
 
+def mirror_to_loading_side(trucks: list[Truck], truck_width: float, loading_side: str) -> None:
+    """The packing loop always packs toward Y=0 (Bottom-*Left*-Back). For "right"
+    this mirrors every placement across the truck's width so cargo instead hugs
+    the Y=truck_width wall -- a rigid reflection, so it changes nothing about
+    collision-freeness or support relationships (those are defined by instance
+    IDs, not coordinates), it only changes which wall the load sits against.
+    """
+    if loading_side != "right":
+        return
+    for truck in trucks:
+        for item in truck.items:
+            item.y = truck_width - item.y - item.width
+
+
 @dataclass
 class PackingResult:
     trucks: list[Truck]
@@ -312,6 +326,7 @@ def run_packing(
     transport: Transport,
     max_trucks: int = 50,
     support_ratio_threshold: float = 0.75,
+    loading_side: str = "left",
 ) -> PackingResult:
     instances = expand_instances(cargo_types)
     fittable, impossible = filter_impossible(instances, transport)
@@ -342,6 +357,7 @@ def run_packing(
             best_name = strategy.name
 
     assert best_trucks is not None and best_unplaced is not None
+    mirror_to_loading_side(best_trucks, transport.width, loading_side)
     return PackingResult(
         trucks=best_trucks, unplaced=best_unplaced + impossible, strategy_used=best_name
     )

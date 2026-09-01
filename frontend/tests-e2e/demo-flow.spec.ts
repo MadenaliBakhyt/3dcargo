@@ -114,4 +114,54 @@ test.describe("Cargo Loading Planner - golden path", () => {
     await expect(page.getByText("Не весь груз удалось разместить")).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText("Огромный груз").first()).toBeVisible();
   });
+
+  test("switching the loading side mirrors placements to the opposite wall", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: /Попробовать демо/i }).click();
+    await expect(page.getByText("Весь груз успешно размещён")).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole("tab", { name: "Порядок размещения" }).click();
+    const firstRowLeft = page.locator("table tbody tr").first();
+    const yCellLeft = await firstRowLeft.locator("td").nth(4).textContent();
+
+    await page.getByLabel("Сторона погрузки").click();
+    await page.getByRole("option", { name: "Справа" }).click();
+    await page.getByRole("button", { name: /Рассчитать размещение/i }).click();
+    await expect(page.getByText("Весь груз успешно размещён")).toBeVisible({ timeout: 15_000 });
+
+    const firstRowRight = page.locator("table tbody tr").first();
+    const yCellRight = await firstRowRight.locator("td").nth(4).textContent();
+
+    // Same dense pack, mirrored across the truck's width -- not the same Y.
+    expect(yCellRight).not.toBe(yCellLeft);
+  });
+
+  test("renaming, saving as a file, starting a new project, and reopening the file restores it", async ({ page }) => {
+    await page.goto("/");
+    const nameInput = page.getByLabel("Название проекта");
+    await nameInput.fill("Мой тестовый проект");
+    await nameInput.blur();
+
+    await page.getByRole("button", { name: /Попробовать демо/i }).click();
+    await expect(page.getByText("Весь груз успешно размещён")).toBeVisible({ timeout: 15_000 });
+
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("button", { name: /Сохранить как файл/i }).click(),
+    ]);
+    // Cyrillic names must still produce a real (non-generic) filename -- see toFilenameStem.
+    expect(download.suggestedFilename()).not.toBe("download");
+    expect(download.suggestedFilename()).toMatch(/\.json$/);
+    const savePath = await download.path();
+    if (!savePath) throw new Error("download did not save to disk");
+
+    await page.getByRole("button", { name: "Новый расчёт", exact: true }).click();
+    await page.getByRole("button", { name: "Очистить" }).click();
+    await expect(nameInput).toHaveValue("Новый расчёт");
+
+    await page.getByRole("button", { name: "Загрузить", exact: true }).click();
+    await page.locator('input[type="file"]').setInputFiles(savePath);
+    await expect(nameInput).toHaveValue("Мой тестовый проект");
+    await expect(page.locator("table")).toContainText("Паллета A");
+  });
 });

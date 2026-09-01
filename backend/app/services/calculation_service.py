@@ -29,6 +29,7 @@ def calculate(request: CalculationRequest) -> CalculationResponse:
         transport=transport,
         max_trucks=request.settings.max_trucks,
         support_ratio_threshold=request.settings.support_ratio_threshold,
+        loading_side=request.settings.loading_side.value,
     )
 
     warnings: list[str] = []

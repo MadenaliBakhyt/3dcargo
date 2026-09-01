@@ -2,11 +2,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import { generateId } from "@/lib/utils";
-import type { CalculationResponse, CalculationSettings, CargoType, Transport } from "@/types";
+import type { CalculationResponse, CalculationSettings, CargoType, Project, Transport } from "@/types";
 
 const DEFAULT_SETTINGS: CalculationSettings = {
   maxTrucks: 50,
   supportRatioThreshold: 0.75,
+  loadingSide: "left",
 };
 
 export interface CargoStoreState {
@@ -37,13 +38,7 @@ export interface CargoStoreState {
   setSelectedInstanceId: (id: string | null) => void;
 
   resetProject: () => void;
-  loadProject: (data: {
-    projectName?: string;
-    transport: Transport | null;
-    cargoTypes: CargoType[];
-    settings?: CalculationSettings;
-    result?: CalculationResponse | null;
-  }) => void;
+  loadProject: (data: Project) => void;
 }
 
 export const useCargoStore = create<CargoStoreState>()(
@@ -128,10 +123,12 @@ export const useCargoStore = create<CargoStoreState>()(
 
       loadProject: (data) =>
         set({
-          projectName: data.projectName ?? "Загруженный проект",
+          projectName: data.name || "Загруженный проект",
           transport: data.transport,
           cargoTypes: data.cargoTypes,
-          settings: data.settings ?? DEFAULT_SETTINGS,
+          // Merge over the defaults so a project file/localStorage entry saved
+          // before a settings field existed (e.g. loadingSide) still gets one.
+          settings: { ...DEFAULT_SETTINGS, ...data.settings },
           result: data.result ?? null,
           selectedTruckId: data.result?.trucks[0]?.id ?? null,
           selectedInstanceId: null,
@@ -140,6 +137,14 @@ export const useCargoStore = create<CargoStoreState>()(
     {
       name: "cargo-loading-planner-project",
       version: 1,
+      merge: (persisted, current) => {
+        const persistedState = (persisted ?? {}) as Partial<CargoStoreState>;
+        return {
+          ...current,
+          ...persistedState,
+          settings: { ...DEFAULT_SETTINGS, ...persistedState.settings },
+        };
+      },
     }
   )
 );

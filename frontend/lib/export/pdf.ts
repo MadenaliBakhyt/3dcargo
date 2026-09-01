@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+import { toFilenameStem } from "@/lib/export/downloadFile";
 import { transportVolumeM3 } from "@/lib/transportPresets";
 import type { CalculationResponse, CargoType, Transport } from "@/types";
 
@@ -125,5 +126,5 @@ export function exportProjectPdf({ projectName, transport, cargoTypes, result }:
     }
   }
 
-  doc.save(`${projectName || "cargo-loading-plan"}.pdf`);
+  doc.save(`${toFilenameStem(projectName)}.pdf`);
 }
