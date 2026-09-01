@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS: CalculationSettings = {
   maxTrucks: 50,
   supportRatioThreshold: 0.75,
   loadingSide: "left",
+  preferStacking: false,
 };
 
 export interface CargoStoreState {

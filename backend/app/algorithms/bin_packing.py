@@ -163,12 +163,17 @@ def _check_and_build(
 
 
 def _place_first_fit(
-    inst: Instance, truck: Truck, transport: Transport, support_ratio_threshold: float, loading_order: int
+    inst: Instance,
+    truck: Truck,
+    transport: Transport,
+    support_ratio_threshold: float,
+    loading_order: int,
+    prefer_stacking: bool = False,
 ) -> PlacedItem | None:
     orientations = get_orientations(
         inst.length, inst.width, inst.height, inst.allow_rotation, inst.allow_vertical_rotation
     )
-    for point in truck.points.sorted_bottom_left_back():
+    for point in truck.points.sorted_bottom_left_back(prefer_stacking):
         for orientation in orientations:
             placed = _check_and_build(
                 inst, point, orientation, truck, transport, support_ratio_threshold, loading_order
@@ -179,21 +184,27 @@ def _place_first_fit(
 
 
 def _place_best_fit(
-    inst: Instance, truck: Truck, transport: Transport, support_ratio_threshold: float, loading_order: int
+    inst: Instance,
+    truck: Truck,
+    transport: Transport,
+    support_ratio_threshold: float,
+    loading_order: int,
+    prefer_stacking: bool = False,
 ) -> PlacedItem | None:
     orientations = get_orientations(
         inst.length, inst.width, inst.height, inst.allow_rotation, inst.allow_vertical_rotation
     )
     best: PlacedItem | None = None
     best_key: tuple | None = None
-    for point in truck.points.sorted_bottom_left_back()[:BEST_FIT_POINT_CAP]:
+    z_sign = -1 if prefer_stacking else 1
+    for point in truck.points.sorted_bottom_left_back(prefer_stacking)[:BEST_FIT_POINT_CAP]:
         for orientation in orientations:
             placed = _check_and_build(
                 inst, point, orientation, truck, transport, support_ratio_threshold, loading_order
             )
             if placed is None:
                 continue
-            key = (placed.z, placed.y, placed.x, placed.height)
+            key = (z_sign * placed.z, placed.y, placed.x, placed.height)
             if best_key is None or key < best_key:
                 best, best_key = placed, key
     return best
@@ -215,6 +226,7 @@ def pack_single_strategy(
     mode: str,
     support_ratio_threshold: float,
     max_trucks: int,
+    prefer_stacking: bool = False,
 ) -> tuple[list[Truck], list[UnplacedInstance]]:
     trucks: list[Truck] = []
     unplaced: list[UnplacedInstance] = []
@@ -227,7 +239,7 @@ def pack_single_strategy(
         for truck in trucks:
             if truck.weight_used + inst.weight > transport.max_weight + EPS:
                 continue
-            placed = place_fn(inst, truck, transport, support_ratio_threshold, loading_order)
+            placed = place_fn(inst, truck, transport, support_ratio_threshold, loading_order, prefer_stacking)
             if placed is not None:
                 _apply_placement(placed, truck)
                 break
@@ -247,7 +259,7 @@ def pack_single_strategy(
             items=[],
             placed_by_id={},
         )
-        placed = place_fn(inst, new_truck, transport, support_ratio_threshold, loading_order)
+        placed = place_fn(inst, new_truck, transport, support_ratio_threshold, loading_order, prefer_stacking)
         if placed is not None:
             _apply_placement(placed, new_truck)
             trucks.append(new_truck)
@@ -327,6 +339,7 @@ def run_packing(
     max_trucks: int = 50,
     support_ratio_threshold: float = 0.75,
     loading_side: str = "left",
+    prefer_stacking: bool = False,
 ) -> PackingResult:
     instances = expand_instances(cargo_types)
     fittable, impossible = filter_impossible(instances, transport)
@@ -345,7 +358,7 @@ def run_packing(
     for strategy in strategies:
         sorted_instances = sorted(fittable, key=strategy.key)
         trucks, unplaced = pack_single_strategy(
-            sorted_instances, transport, strategy.mode, support_ratio_threshold, max_trucks
+            sorted_instances, transport, strategy.mode, support_ratio_threshold, max_trucks, prefer_stacking
         )
         s = score_result(
             [t.items for t in trucks], unplaced, truck_volume, transport.max_weight

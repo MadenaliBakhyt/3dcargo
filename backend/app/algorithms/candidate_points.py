@@ -22,14 +22,24 @@ class CandidatePoints:
     def discard(self, point: tuple[float, float, float]) -> None:
         self._points.discard(point)
 
-    def sorted_bottom_left_back(self) -> list[tuple[float, float, float]]:
-        """Bottom-Front-Left order: lowest Z (closest to floor) first, then
-        lowest X (closest to the front), then lowest Y (closest to the left
-        wall). Prioritizing X before Y means the packer fills a row across
-        the truck's *width* at the current front position before it ever
-        advances further down the *length* -- matching how cargo is loaded
-        in practice (side by side across the trailer, row by row down its
-        length) instead of hugging one wall in a single line the full length
-        of the truck before ever using the rest of the width.
+    def sorted_bottom_left_back(self, prefer_stacking: bool = False) -> list[tuple[float, float, float]]:
+        """Bottom-Front-Left order by default: lowest Z (closest to floor)
+        first, then lowest X (closest to the front), then lowest Y (closest
+        to the left wall). Prioritizing X before Y means the packer fills a
+        row across the truck's *width* at the current front position before
+        it ever advances further down the *length* -- matching how cargo is
+        loaded in practice (side by side across the trailer, row by row down
+        its length) instead of hugging one wall in a single line the full
+        length of the truck before ever using the rest of the width.
+
+        With prefer_stacking, Z is inverted (highest first): the top of an
+        already-started stack always outranks an empty floor spot, so the
+        packer builds one column as tall as stacking rules allow before
+        starting a new footprint -- instead of covering the floor in a
+        single layer first. Only ever matters for cargo that's actually
+        stackable; it changes candidate *order*, not which placements are
+        valid, so per-item stacking rules (max tiers/height/top load,
+        fragile) are unaffected.
         """
-        return sorted(self._points, key=lambda p: (p[2], p[0], p[1]))
+        z_key = (lambda z: -z) if prefer_stacking else (lambda z: z)
+        return sorted(self._points, key=lambda p: (z_key(p[2]), p[0], p[1]))

@@ -49,6 +49,7 @@ export interface CalculationSettings {
   maxTrucks: number;
   supportRatioThreshold: number;
   loadingSide: LoadingSide;
+  preferStacking: boolean;
 }
 
 export interface CalculationRequest {

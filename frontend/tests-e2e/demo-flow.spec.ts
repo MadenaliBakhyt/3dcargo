@@ -156,6 +156,39 @@ test.describe("Cargo Loading Planner - golden path", () => {
     expect(yCellRight).not.toBe(yCellLeft);
   });
 
+  test("enabling 'prefer stacking' stacks boxes instead of spreading them across the floor", async ({ page }) => {
+    await page.goto("/");
+    await selectEuroTruck(page);
+    await addCargo(page, {
+      name: "Коробка малая",
+      length: "50",
+      width: "50",
+      height: "50",
+      weight: "10",
+      quantity: "6",
+    });
+
+    await page.getByRole("button", { name: /Рассчитать размещение/i }).click();
+    await expect(page.getByText("Весь груз успешно размещён")).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole("tab", { name: "Порядок размещения" }).click();
+    const zCellsFlat = await page.locator("table tbody tr td:nth-child(6)").allTextContents();
+    // Default: floor is nowhere near full (euro truck fits far more than 6
+    // of these), so every box should sit on the floor, z = 0.
+    expect(zCellsFlat.every((z) => z === "0")).toBe(true);
+
+    await page.getByRole("tab", { name: "3D" }).click();
+    await page.getByLabel("Сначала штабелировать").click();
+    await page.getByRole("button", { name: /Рассчитать размещение/i }).click();
+    await expect(page.getByText("Весь груз успешно размещён")).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole("tab", { name: "Порядок размещения" }).click();
+    const zCellsStacked = await page.locator("table tbody tr td:nth-child(6)").allTextContents();
+    // With the toggle on, at least one box must be off the floor even
+    // though there's still plenty of unused floor space available.
+    expect(zCellsStacked.some((z) => z !== "0")).toBe(true);
+  });
+
   test("all vehicle presets, including the new trailer types, are selectable", async ({ page }) => {
     await page.goto("/");
     await page.getByLabel("Транспорт").click();

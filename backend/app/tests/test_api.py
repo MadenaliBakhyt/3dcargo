@@ -60,6 +60,24 @@ def test_calculate_endpoint_respects_loading_side_setting():
     assert placement["y"] + placement["width"] == 200
 
 
+def test_calculate_endpoint_respects_prefer_stacking_setting():
+    payload = {
+        "transport": {"id": "t", "name": "T", "length": 1000, "width": 1000, "height": 300, "maxWeight": 50000},
+        "cargoTypes": [
+            {
+                "id": "c1", "name": "Box", "length": 50, "width": 50, "height": 50,
+                "weight": 10, "quantity": 6, "stackable": True,
+            }
+        ],
+        "settings": {"preferStacking": True},
+    }
+    response = client.post("/api/calculate", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    zs = sorted(p["z"] for p in data["placements"])
+    assert zs == [0, 50, 100, 150, 200, 250]
+
+
 def test_calculate_endpoint_rejects_empty_cargo_list():
     payload = {
         "transport": {

@@ -28,6 +28,16 @@ class CalculationSettings(CamelModel):
     max_trucks: int = Field(default=50, ge=1, le=500)
     support_ratio_threshold: float = Field(default=0.75, ge=0.1, le=1.0)
     loading_side: LoadingSide = LoadingSide.LEFT
+    prefer_stacking: bool = Field(
+        default=False,
+        description=(
+            "When true, the packer builds each stack as tall as stacking rules "
+            "allow before starting a new footprint, instead of covering the "
+            "floor in a single layer first. Only affects candidate order -- "
+            "per-item stacking rules (stackable, max tiers/height, top load, "
+            "fragile) still decide what's actually valid."
+        ),
+    )
 
 
 class CalculationRequest(CamelModel):
