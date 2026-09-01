@@ -24,20 +24,10 @@ class LoadingSide(str, Enum):
     RIGHT = "right"
 
 
-class LoadingDirection(str, Enum):
-    """Which end along the vehicle's length cargo is packed against. "front"
-    (default) hugs the cab end (X=0); "back" hugs the open rear doors. Purely
-    an X-axis mirror, same reasoning as LoadingSide."""
-
-    FRONT = "front"
-    BACK = "back"
-
-
 class CalculationSettings(CamelModel):
     max_trucks: int = Field(default=50, ge=1, le=500)
     support_ratio_threshold: float = Field(default=0.75, ge=0.1, le=1.0)
     loading_side: LoadingSide = LoadingSide.LEFT
-    loading_direction: LoadingDirection = LoadingDirection.FRONT
 
 
 class CalculationRequest(CamelModel):

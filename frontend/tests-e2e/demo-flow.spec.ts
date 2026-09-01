@@ -136,27 +136,6 @@ test.describe("Cargo Loading Planner - golden path", () => {
     expect(yCellRight).not.toBe(yCellLeft);
   });
 
-  test("switching the loading direction mirrors placements to the opposite end", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("button", { name: /Попробовать демо/i }).click();
-    await expect(page.getByText("Весь груз успешно размещён")).toBeVisible({ timeout: 15_000 });
-
-    await page.getByRole("tab", { name: "Порядок размещения" }).click();
-    const firstRowFront = page.locator("table tbody tr").first();
-    const xCellFront = await firstRowFront.locator("td").nth(3).textContent();
-
-    await page.getByLabel("Направление погрузки").click();
-    await page.getByRole("option", { name: "Сзади" }).click();
-    await page.getByRole("button", { name: /Рассчитать размещение/i }).click();
-    await expect(page.getByText("Весь груз успешно размещён")).toBeVisible({ timeout: 15_000 });
-
-    const firstRowBack = page.locator("table tbody tr").first();
-    const xCellBack = await firstRowBack.locator("td").nth(3).textContent();
-
-    // Same dense pack, mirrored along the truck's length -- not the same X.
-    expect(xCellBack).not.toBe(xCellFront);
-  });
-
   test("all vehicle presets, including the new trailer types, are selectable", async ({ page }) => {
     await page.goto("/");
     await page.getByLabel("Транспорт").click();
